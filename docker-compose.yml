@@ -1,0 +1,122 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      target: app
+    volumes:
+      - .:/app
+    stop_grace_period: 0s
+    ports:
+      - 127.0.0.2:8080:80
+    networks:
+      network:
+        ipv4_address: 10.0.0.2
+
+  app-database:
+    image: postgres:${POSTGRES_VERSION:-15}-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    volumes:
+      - app_database_data:/var/lib/postgresql/data:rw
+    ports:
+      - 127.0.0.2:5432:5432
+    networks:
+      network:
+        ipv4_address: 10.0.0.3
+
+  # Payment gateway
+  payment-gateway:
+    build:
+      context: .
+      target: payment-gateway
+    volumes:
+      - ./docker/payment-gateway/app:/app
+    stop_grace_period: 0s
+    ports:
+      - 127.0.0.3:8081:80
+    networks:
+      network:
+        ipv4_address: 10.0.0.4
+
+  payment-gateway-database:
+    image: postgres:${POSTGRES_VERSION:-15}-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    volumes:
+      - payment_gateway_database_data:/var/lib/postgresql/data:rw
+    ports:
+      - 127.0.0.3:5433:5432
+    networks:
+      network:
+        ipv4_address: 10.0.0.5
+      
+  # Exchange
+  exchange:
+    build:
+      context: .
+      target: exchange
+    volumes:
+      - ./docker/Projects/Exchange:/app
+    stop_grace_period: 0s
+    networks:
+      network:
+        ipv4_address: 10.0.0.6
+
+  exchange-database:
+    image: postgres:${POSTGRES_VERSION:-15}-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    volumes:
+      - exchange_database_data:/var/lib/postgresql/data:rw
+    ports:
+      - 5434:5432
+    networks:
+      network:
+        ipv4_address: 10.0.0.7
+      
+  # Transport company
+  transport-company:
+    build:
+      context: .
+      target: transport-company
+    volumes:
+      - ./docker/Projects/TransportCompany/Dpd:/app
+    stop_grace_period: 0s
+    networks:
+        network:
+          ipv4_address: 10.0.0.8
+
+  transport-company-database:
+    image: postgres:${POSTGRES_VERSION:-15}-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    volumes:
+      - transport_company_database_data:/var/lib/postgresql/data:rw
+    ports:
+      - 5435:5432
+    networks:
+      network:
+        ipv4_address: 10.0.0.9
+      
+volumes:
+  app_database_data:
+  payment_gateway_database_data:
+  exchange_database_data:
+  transport_company_database_data:
+
+networks:
+  network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+          gateway: 10.0.0.1

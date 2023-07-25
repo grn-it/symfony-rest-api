@@ -1,0 +1,23 @@
+# Guest
+curl -s -X GET http://127.0.0.2/service/user/guest/create -c .cookie-jar -H "Accept: application/json" | jq
+# User
+curl -s -X POST http://127.0.0.2/service/json-login/authorize -c .cookie-jar -H "Content-Type: application/json" -H "Accept: application/json" -d '{"username":"james.smith@gmail.com","password": "p@ssw0rd"}' | jq
+curl -s -X POST http://127.0.0.2/service/json-login/authorize -b .cookie-jar -c .cookie-jar -H "Content-Type: application/json" -H "Accept: application/json" -d '{"username":"james.smith@gmail.com","password": "p@ssw0rd"}' | jq
+# Admin
+curl -s -X POST http://127.0.0.2/service/json-login/authorize -c .cookie-jar -H "Content-Type: application/json" -H "Accept: application/json" -d '{"username":"oliver.williams@gmail.com","password": "p@ssw0rd"}' | jq
+
+# Order
+curl -s -X GET http://127.0.0.2/api/orders -b .cookie-jar -H "Accept: application/json" | jq
+curl -s -X POST http://127.0.0.2/api/orders -b .cookie-jar -H "Accept: application/json" | jq
+curl -s -X GET http://127.0.0.2/api/orders/1 -b .cookie-jar -H "Accept: application/json" | jq
+curl -s -X DELETE http://127.0.0.2/api/orders/1 -b .cookie-jar -H "Accept: application/json" | jq
+# Order products
+curl -s -X GET http://127.0.0.2/api/order-products -b .cookie-jar -H "Accept: application/json" | jq
+curl -s -X POST http://127.0.0.2/api/order-products -b .cookie-jar -H "Content-Type: application/json" -H "Accept: application/json" -d '{"order": {"id":1}, "product": {"id":1}, "quantity": 1}' | jq
+curl -s -X GET http://127.0.0.2/api/order-products/1 -b .cookie-jar -H "Accept: application/json" | jq
+curl -s -X PUT http://127.0.0.2/api/order-products/1 -b .cookie-jar -H "Content-Type: application/json" -H "Accept: application/json" -d '{"quantity": 2}' | jq
+curl -s -X DELETE http://127.0.0.2/api/order-products/1 -b .cookie-jar -H "Accept: application/json" | jq
+
+curl -s -X GET http://127.0.0.2/service/order/pay -b .cookie-jar -H "Accept: application/json" | jq
+
+reset; curl -s -X POST http://payment-gateway/api/payments -H "Authorization: Bearer 01ba9556-ce38-45f7-9d8b-18d5e52f4c9e" -H "Content-Type: application/json" -H "Accept: application/json" -d '{"amount":100,"type":"transfer","returnUrl":"http://test.com","description":"Payment for order #1"}' | jq
